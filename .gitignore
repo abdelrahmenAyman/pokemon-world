@@ -1,0 +1,6 @@
+.mypy_cache/
+/workspace.xml
+.idea/
+db.sqlite3
+__pycache__/
+.pytest_cache/

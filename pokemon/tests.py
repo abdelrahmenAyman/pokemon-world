@@ -5,9 +5,9 @@ from rest_framework.reverse import reverse
 from rest_framework.test import APITestCase
 
 from pokemon.exceptions import PokemonDoesNotExist
-from pokemon.factories import UserFactory, AbilityFactory
+from pokemon.factories import UserFactory, AbilityFactory, PokemonFactory
 from pokemon.models import Pokemon, Ability
-from pokemon.external_pokemon_api import retrieve_pokemon_from_api, create_ability_from_json
+from pokemon.external_pokemon_api import retrieve_pokemon_from_api, create_ability_from_json, retrieve_pokemon_abilities
 
 
 class CreatePokemonActionTestSuite(APITestCase):
@@ -23,7 +23,7 @@ class CreatePokemonActionTestSuite(APITestCase):
         self.logged_in_user = UserFactory()
         self.client.force_login(self.logged_in_user)
 
-    @patch('pokemon.views.retrieve_pokemon_abilities_from_api')
+    @patch('pokemon.views.retrieve_pokemon_abilities')
     def test_pokemon_creator_is_set_to_request_user(self, api_call_func):
         api_call_func.return_value = [AbilityFactory() for _ in range(2)]
         response = self.client.post(path=self.list_path, data=self.valid_creation_data)
@@ -31,13 +31,22 @@ class CreatePokemonActionTestSuite(APITestCase):
         self.assertEqual(201, response.status_code)
         self.assertEqual(self.logged_in_user, Pokemon.objects.all().first().creator)
 
-    @patch('pokemon.views.retrieve_pokemon_abilities_from_api')
+    @patch('pokemon.views.retrieve_pokemon_abilities')
     def test_created_pokemon_has_abilities(self, api_call_func):
         api_call_func.return_value = [AbilityFactory() for _ in range(2)]
         response = self.client.post(path=self.list_path, data=self.valid_creation_data)
 
         self.assertEqual(201, response.status_code)
         self.assertEqual(2, Pokemon.objects.all().first().abilities.count())
+
+    @patch('pokemon.external_pokemon_api.requests.get')
+    def test_api_module_throw_exception_pokemon_does_not_Exist(self, mock_get):
+        mock_response = Response()
+        mock_response.status_code = 404
+        mock_get.return_value = mock_response
+
+        response = self.client.post(path=self.list_path, data=self.valid_creation_data)
+        self.assertEqual(400, response.status_code)
 
 
 class ExternalPokemonAPIModuleTestSuite(APITestCase):
@@ -85,3 +94,16 @@ class ExternalPokemonAPIModuleTestSuite(APITestCase):
         ability = create_ability_from_json(self.mock_ability_entry)
         self.assertEqual(ability.api_obj_id, duplicate_ability.api_obj_id)
         self.assertEqual(1, Ability.objects.count())
+
+    @patch('pokemon.external_pokemon_api.retrieve_pokemon_from_api')
+    def test_retrieve_pokemon_abilities_uses_db_instead_of_api_when_pokemon_with_same_name_exists(self, api_call):
+        existing_pokemon = PokemonFactory(name='Great Pokemon')
+        existing_abilities = [AbilityFactory() for _ in range(2)]
+        for ability in existing_abilities:
+            existing_pokemon.abilities.add(ability)
+
+        abilities = retrieve_pokemon_abilities(existing_pokemon.name)
+
+        self.assertFalse(api_call.called)
+        self.assertEqual(len(existing_pokemon.abilities.all()), len(abilities))
+        self.assertEqual(existing_pokemon.abilities.first().pk, abilities[0].pk)

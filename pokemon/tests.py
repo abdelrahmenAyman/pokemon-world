@@ -89,6 +89,7 @@ class ExternalPokemonAPIModuleTestSuite(APITestCase):
     @patch('pokemon.external_pokemon_api.get_ability_from_api')
     def test_create_ability_from_json_does_not_create_duplicates(self, api_call):
         duplicate_ability = AbilityFactory()
+        self.mock_ability['id'] = duplicate_ability.api_obj_id
         api_call.return_value = self.mock_ability
 
         ability = create_ability_from_json(self.mock_ability_entry)

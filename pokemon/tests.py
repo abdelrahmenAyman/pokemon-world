@@ -1,13 +1,13 @@
 from unittest.mock import patch
-from requests.models import Response
 
+from requests.models import Response
 from rest_framework.reverse import reverse
 from rest_framework.test import APITestCase
 
 from pokemon.exceptions import PokemonDoesNotExist
+from pokemon.external_pokemon_api import retrieve_pokemon_from_api, create_ability_from_json, retrieve_pokemon_abilities
 from pokemon.factories import UserFactory, AbilityFactory, PokemonFactory
 from pokemon.models import Pokemon, Ability
-from pokemon.external_pokemon_api import retrieve_pokemon_from_api, create_ability_from_json, retrieve_pokemon_abilities
 
 
 class CreatePokemonActionTestSuite(APITestCase):
@@ -22,6 +22,11 @@ class CreatePokemonActionTestSuite(APITestCase):
 
         self.logged_in_user = UserFactory()
         self.client.force_login(self.logged_in_user)
+
+    def test_user_is_not_authenticated(self):
+        self.client.logout()
+        response = self.client.post(path=self.list_path, data=self.valid_creation_data)
+        self.assertEqual(401, response.status_code)
 
     @patch('pokemon.views.retrieve_pokemon_abilities')
     def test_pokemon_creator_is_set_to_request_user(self, api_call_func):

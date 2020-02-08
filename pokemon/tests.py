@@ -21,7 +21,7 @@ class CreatePokemonActionTestSuite(APITestCase):
         }
 
         self.logged_in_user = UserFactory()
-        self.client.force_login(self.logged_in_user)
+        self.client.force_authenticate(self.logged_in_user)
 
     def test_user_is_not_authenticated(self):
         self.client.logout()
@@ -50,6 +50,15 @@ class CreatePokemonActionTestSuite(APITestCase):
         mock_response.status_code = 404
         mock_get.return_value = mock_response
 
+        response = self.client.post(path=self.list_path, data=self.valid_creation_data)
+        self.assertEqual(400, response.status_code)
+
+    @patch('pokemon.views.retrieve_pokemon_abilities')
+    def test_create_two_pokemons_with_same_name(self, api_call_func):
+        api_call_func.return_value = [AbilityFactory() for _ in range(2)]
+        pokemon = PokemonFactory()
+
+        self.valid_creation_data['name'] = pokemon.name
         response = self.client.post(path=self.list_path, data=self.valid_creation_data)
         self.assertEqual(400, response.status_code)
 

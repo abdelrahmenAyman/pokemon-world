@@ -2,6 +2,7 @@ from rest_framework.mixins import CreateModelMixin
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.serializers import BaseSerializer
 from rest_framework.viewsets import GenericViewSet
 
 from pokemon.exceptions import PokemonDoesNotExist
@@ -13,7 +14,7 @@ class PokemonViewSet(GenericViewSet, CreateModelMixin):
     serializer_class = PokemonCreateSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
 
-    def perform_create(self, serializer: PokemonCreateSerializer) -> None:
+    def perform_create(self, serializer: BaseSerializer) -> None:
         abilities = retrieve_pokemon_abilities(serializer.validated_data['name'])
         serializer.save(abilities=abilities)
 

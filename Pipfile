@@ -8,11 +8,15 @@ factory-boy = "*"
 ipython = "*"
 mypy = "*"
 pytest-django = "*"
+djangorestframework-stubs = "*"
+django-stubs = "*"
 
 [packages]
 django = "*"
 djangorestframework = "*"
 requests = "*"
+pip = "*"
+django-stubs = "*"
 
 [requires]
 python_version = "3.7"

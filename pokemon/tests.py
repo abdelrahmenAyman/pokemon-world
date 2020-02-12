@@ -191,3 +191,9 @@ class UpdatePokemonActionTestSuite(APITestCase):
         self.pokemon_to_update.refresh_from_db()
         self.assertEqual(403, response.status_code)
         self.assertNotEqual(self.weight_data['weight'], self.pokemon_to_update.weight)
+
+    def test_update_abilities(self):
+        data = {'abilities': [1, 2]}
+        Ability.objects.all().delete()
+        self.client.patch(path=self.update_path, data=data)
+        self.assertTrue(self.pokemon_to_update.abilities.count() == 0)

@@ -1,13 +1,13 @@
 from unittest.mock import patch
-from requests.models import Response
 
+from requests.models import Response
 from rest_framework.reverse import reverse
 from rest_framework.test import APITestCase
 
 from pokemon.exceptions import PokemonDoesNotExist
+from pokemon.external_pokemon_api import retrieve_pokemon_from_api, create_ability_from_json, retrieve_pokemon_abilities
 from pokemon.factories import UserFactory, AbilityFactory, PokemonFactory
 from pokemon.models import Pokemon, Ability
-from pokemon.external_pokemon_api import retrieve_pokemon_from_api, create_ability_from_json, retrieve_pokemon_abilities
 
 
 class CreatePokemonActionTestSuite(APITestCase):
@@ -21,7 +21,12 @@ class CreatePokemonActionTestSuite(APITestCase):
         }
 
         self.logged_in_user = UserFactory()
-        self.client.force_login(self.logged_in_user)
+        self.client.force_authenticate(self.logged_in_user)
+
+    def test_user_is_not_authenticated(self):
+        self.client.logout()
+        response = self.client.post(path=self.list_path, data=self.valid_creation_data)
+        self.assertEqual(401, response.status_code)
 
     @patch('pokemon.views.retrieve_pokemon_abilities')
     def test_pokemon_creator_is_set_to_request_user(self, api_call_func):
@@ -45,6 +50,15 @@ class CreatePokemonActionTestSuite(APITestCase):
         mock_response.status_code = 404
         mock_get.return_value = mock_response
 
+        response = self.client.post(path=self.list_path, data=self.valid_creation_data)
+        self.assertEqual(400, response.status_code)
+
+    @patch('pokemon.views.retrieve_pokemon_abilities')
+    def test_create_two_pokemons_with_same_name(self, api_call_func):
+        api_call_func.return_value = [AbilityFactory() for _ in range(2)]
+        pokemon = PokemonFactory()
+
+        self.valid_creation_data['name'] = pokemon.name
         response = self.client.post(path=self.list_path, data=self.valid_creation_data)
         self.assertEqual(400, response.status_code)
 
@@ -89,6 +103,7 @@ class ExternalPokemonAPIModuleTestSuite(APITestCase):
     @patch('pokemon.external_pokemon_api.get_ability_from_api')
     def test_create_ability_from_json_does_not_create_duplicates(self, api_call):
         duplicate_ability = AbilityFactory()
+        self.mock_ability['id'] = duplicate_ability.api_obj_id
         api_call.return_value = self.mock_ability
 
         ability = create_ability_from_json(self.mock_ability_entry)

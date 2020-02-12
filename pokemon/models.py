@@ -20,8 +20,9 @@ class Ability(models.Model):
 
 
 class Pokemon(models.Model):
+    creator = models.ForeignKey(User, related_name='created_pokemons', on_delete=models.SET_NULL, null=True)
+
     name = models.CharField(max_length=75)
     description = models.CharField(max_length=250)
     weight = models.DecimalField(max_digits=4, decimal_places=1)
     abilities = models.ManyToManyField(Ability, related_name='pokemons')
-    creator = models.ForeignKey(User, related_name='created_pokemons', on_delete=models.SET_NULL, null=True)

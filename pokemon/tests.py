@@ -126,6 +126,7 @@ class ExternalPokemonAPIModuleTestSuite(APITestCase):
 
 
 class ListPokemonActionTestSuite(APITestCase):
+
     def setUp(self):
         self.list_path = reverse('pokemon-list')
 
@@ -143,3 +144,56 @@ class ListPokemonActionTestSuite(APITestCase):
 
         self.assertEqual(200, response.status_code)
         self.assertEqual(Pokemon.objects.count(), len(response.data))
+
+
+class UpdatePokemonActionTestSuite(APITestCase):
+
+    def setUp(self):
+        self.pokemon_to_update = PokemonFactory()
+        self.update_path = reverse('pokemon-detail', kwargs={'pk': self.pokemon_to_update.pk})
+        self.description_data = {'description': 'Some new description'}
+        self.weight_data = {'weight': 52}
+
+    def test_update_description_as_anonymous_user(self):
+        response = self.client.patch(path=self.update_path, data=self.description_data)
+
+        self.pokemon_to_update.refresh_from_db()
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(self.description_data['description'], self.pokemon_to_update.description)
+
+    def test_update_description_as_authenticated_user(self):
+        self.client.force_authenticate(UserFactory())
+        response = self.client.patch(path=self.update_path, data=self.description_data)
+
+        self.pokemon_to_update.refresh_from_db()
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(self.description_data['description'], self.pokemon_to_update.description)
+
+    def test_update_weight_as_pokemon_creator(self):
+        self.client.force_authenticate(self.pokemon_to_update.creator)
+        response = self.client.patch(path=self.update_path, data=self.weight_data)
+
+        self.pokemon_to_update.refresh_from_db()
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(self.weight_data['weight'], self.pokemon_to_update.weight)
+
+    def test_update_weight_as_anonymous_user(self):
+        response = self.client.patch(path=self.update_path, data=self.weight_data)
+
+        self.pokemon_to_update.refresh_from_db()
+        self.assertEqual(403, response.status_code)
+        self.assertNotEqual(self.weight_data['weight'], self.pokemon_to_update.weight)
+
+    def test_update_another_user_pokemon_weight_as_authenticated_user(self):
+        self.client.force_authenticate(UserFactory())
+        response = self.client.patch(path=self.update_path, data=self.weight_data)
+
+        self.pokemon_to_update.refresh_from_db()
+        self.assertEqual(403, response.status_code)
+        self.assertNotEqual(self.weight_data['weight'], self.pokemon_to_update.weight)
+
+    def test_update_abilities(self):
+        data = {'abilities': [1, 2]}
+        Ability.objects.all().delete()
+        self.client.patch(path=self.update_path, data=data)
+        self.assertTrue(self.pokemon_to_update.abilities.count() == 0)

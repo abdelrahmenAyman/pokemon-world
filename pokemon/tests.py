@@ -196,4 +196,4 @@ class UpdatePokemonActionTestSuite(APITestCase):
         data = {'abilities': [1, 2]}
         Ability.objects.all().delete()
         self.client.patch(path=self.update_path, data=data)
-        self.assertTrue(self.pokemon_to_update.abilities.count() == 0)
+        self.assertEqual(0, self.pokemon_to_update.abilities.count())

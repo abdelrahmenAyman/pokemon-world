@@ -2,13 +2,21 @@ from typing import Dict
 
 from rest_framework import serializers
 
-from pokemon.models import Pokemon
+from pokemon.models import Pokemon, Ability
 
 
-class PokemonCreateSerializer(serializers.ModelSerializer):
+class AbilitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Ability
+        fields = ('name', 'effect', 'short_effect', 'api_obj_id')
+
+
+class PokemonSerializer(serializers.ModelSerializer):
+    abilities = AbilitySerializer(many=True, required=False, read_only=True)
+
     class Meta:
         model = Pokemon
-        fields = ('name', 'description', 'weight')
+        fields = ('name', 'description', 'weight', 'abilities')
 
     @staticmethod
     def validate_name(value: str) -> str:

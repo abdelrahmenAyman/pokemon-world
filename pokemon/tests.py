@@ -32,6 +32,7 @@ class CreatePokemonActionTestSuite(APITestCase):
     def test_pokemon_creator_is_set_to_request_user(self, api_call_func):
         api_call_func.return_value = [AbilityFactory() for _ in range(2)]
         response = self.client.post(path=self.list_path, data=self.valid_creation_data)
+        print(response.data)
 
         self.assertEqual(201, response.status_code)
         self.assertEqual(self.logged_in_user, Pokemon.objects.all().first().creator)
@@ -122,3 +123,23 @@ class ExternalPokemonAPIModuleTestSuite(APITestCase):
         self.assertFalse(api_call.called)
         self.assertEqual(len(existing_pokemon.abilities.all()), len(abilities))
         self.assertEqual(existing_pokemon.abilities.first().pk, abilities[0].pk)
+
+
+class ListPokemonActionTestSuite(APITestCase):
+    def setUp(self):
+        self.list_path = reverse('pokemon-list')
+
+    def test_list_pokemon_as_anonymous_user(self):
+        PokemonFactory.create_batch(5)
+        response = self.client.get(path=self.list_path)
+
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(Pokemon.objects.count(), len(response.data))
+
+    def test_list_as_authenticated_user(self):
+        PokemonFactory.create_batch(5)
+        self.client.force_authenticate(UserFactory())
+        response = self.client.get(path=self.list_path)
+
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(Pokemon.objects.count(), len(response.data))

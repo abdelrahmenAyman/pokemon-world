@@ -9,7 +9,7 @@ from pokemon.models import Ability, Pokemon
 BASE_API_URL: str = 'https://pokeapi.co/api/v2'
 
 
-def retrieve_pokemon_abilities(pokemon_name: str) -> Union[QuerySet[Ability], Sequence[Ability]]:
+def retrieve_pokemon_abilities(pokemon_name: str) -> Union['QuerySet[Ability]', Sequence[Ability]]:
     """
     Retrieves pokemon based on its unique name, then extracts its abilities and returns them
     as a List of python objects.

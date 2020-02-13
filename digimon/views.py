@@ -1,6 +1,6 @@
 from typing import List, Any
 
-from rest_framework.mixins import CreateModelMixin, UpdateModelMixin
+from rest_framework.mixins import CreateModelMixin, UpdateModelMixin, ListModelMixin
 from rest_framework.permissions import IsAuthenticated, BasePermission
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -11,7 +11,7 @@ from digimon.models import Digimon
 from digimon.serializers import DigimonSerializer
 
 
-class DigimonViewSet(GenericViewSet, CreateModelMixin, UpdateModelMixin):
+class DigimonViewSet(GenericViewSet, CreateModelMixin, UpdateModelMixin, ListModelMixin):
     serializer_class = DigimonSerializer
     permission_classes = [IsAuthenticated]
     queryset = Digimon.objects.all()

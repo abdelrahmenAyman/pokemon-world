@@ -15,26 +15,37 @@ class DigimonCreateActionTestSuite(APITestCase):
             'description': 'Super cool digimon',
             'weight': 68
         }
+        self.authenticated_user = UserFactory()
+        self.client.force_authenticate(self.authenticated_user)
 
     def test_create_digimon_as_anonymous_user(self):
+        self.client.logout()
         response = self.client.post(path=self.create_path, data=self.valid_creation_data)
         self.assertEqual(401, response.status_code)
         self.assertEqual(0, Digimon.objects.count())
 
     def test_create_digimon_as_authenticated_user(self):
-        self.client.force_authenticate(UserFactory())
         response = self.client.post(path=self.create_path, data=self.valid_creation_data)
 
         self.assertEqual(201, response.status_code)
         self.assertEqual(1, Digimon.objects.count())
 
     def test_create_digimon_creator_is_set_to_request_user(self):
-        request_user = UserFactory()
-        self.client.force_authenticate(request_user)
         response = self.client.post(path=self.create_path, data=self.valid_creation_data)
 
         self.assertEqual(201, response.status_code)
-        self.assertEqual(request_user, Digimon.objects.first().creator)
+        self.assertEqual(self.authenticated_user, Digimon.objects.first().creator)
+
+    def test_create_digimon_with_duplicate_name(self):
+        existing_digimon = DigimonFactory()
+        data = {
+            'name': existing_digimon.name,
+            'description': 'Super cool digimon',
+            'weight': 68
+        }
+        response = self.client.post(path=self.create_path, data=data)
+
+        self.assertEqual(400, response.status_code)
 
 
 class UpdateDigimonActionTestSuite(APITestCase):

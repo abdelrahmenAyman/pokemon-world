@@ -28,6 +28,10 @@ class PokemonViewSet(GenericViewSet, CreateModelMixin, ListModelMixin, UpdateMod
             return Response({'detail': 'That name does not match any Pokemon'}, status=400)
 
     def partial_update(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        """
+        Adds permission layer to enforce returning 403 in all cases as opposed to using custom permissions,
+        which will return 401 in case of anonymous users and that is miss leading in our case.
+        """
         if 'weight' in request.data and self.get_object().creator != request.user:
             return Response(status=403, data={'detail': 'Weight can only be updated by pokemon creator'})
         return super().partial_update(request, args, kwargs)

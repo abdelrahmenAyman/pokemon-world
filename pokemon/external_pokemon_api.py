@@ -51,3 +51,14 @@ def create_ability_from_json(ability_entry: dict) -> Ability:
 
 def get_ability_from_api(ability_entry: dict) -> dict:
     return requests.get(ability_entry['ability']['url']).json()
+
+
+def get_pokemon_available_names() -> Sequence[str]:
+    """
+    List pokemons and extract each pokemon name and builds a list using them.
+    Limit query param is used in request url to get all pokemons at once, setting it to 1000 is because we know how
+    many pokemons there are and it won't increase in the future so there is no need to complicate the logic.
+    """
+    response = requests.get(f'{BASE_API_URL}/pokemon/?limit=1000')
+    pokemons_data = response.json()
+    return [pokemon['name'] for pokemon in pokemons_data['results']]

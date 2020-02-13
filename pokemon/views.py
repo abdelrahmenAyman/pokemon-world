@@ -1,5 +1,7 @@
-from typing import List, Any
+from typing import List, Any, Dict
 
+from django.conf import settings
+from rest_framework.metadata import SimpleMetadata
 from rest_framework.mixins import CreateModelMixin, ListModelMixin, UpdateModelMixin
 from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.request import Request
@@ -13,9 +15,19 @@ from pokemon.models import Pokemon
 from pokemon.serializers import PokemonSerializer
 
 
+class PokemonViewSetMetaData(SimpleMetadata):
+    """The purpose of this class is to provide name options for the options request"""
+
+    def get_serializer_info(self, serializer: BaseSerializer) -> Dict[str, Dict[str, Any]]:
+        info = super().get_serializer_info(serializer)
+        info['name']['choices'] = settings.AVAILABLE_POKEMON_NAMES
+        return info
+
+
 class PokemonViewSet(GenericViewSet, CreateModelMixin, ListModelMixin, UpdateModelMixin):
     queryset = Pokemon.objects.all()
     serializer_class = PokemonSerializer
+    metadata_class = PokemonViewSetMetaData
 
     def perform_create(self, serializer: BaseSerializer) -> None:
         abilities = retrieve_pokemon_abilities(serializer.validated_data['name'])

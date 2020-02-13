@@ -1,11 +1,12 @@
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 from requests.models import Response
 from rest_framework.reverse import reverse
 from rest_framework.test import APITestCase
 
 from pokemon.exceptions import PokemonDoesNotExist
-from pokemon.external_pokemon_api import retrieve_pokemon_from_api, create_ability_from_json, retrieve_pokemon_abilities
+from pokemon.external_pokemon_api import retrieve_pokemon_from_api, create_ability_from_json, \
+    retrieve_pokemon_abilities, get_pokemon_available_names
 from pokemon.factories import UserFactory, AbilityFactory, PokemonFactory
 from pokemon.models import Pokemon, Ability
 
@@ -62,6 +63,17 @@ class CreatePokemonActionTestSuite(APITestCase):
         self.valid_creation_data['name'] = pokemon.name
         response = self.client.post(path=self.list_path, data=self.valid_creation_data)
         self.assertEqual(400, response.status_code)
+
+    @patch('pokemon.views.retrieve_pokemon_abilities')
+    def test_create_pokemon_with_invalid_name_does_not_hit_external_api(self, api_call):
+        invalid_data = {
+            'name': 'Non existing pokemon',
+            'description': 'Mighty Pokemon',
+            'weight': 59
+        }
+        response = self.client.post(path=self.list_path, data=invalid_data)
+        self.assertEqual(400, response.status_code)
+        self.assertFalse(api_call.called)
 
 
 class ExternalPokemonAPIModuleTestSuite(APITestCase):
@@ -123,6 +135,27 @@ class ExternalPokemonAPIModuleTestSuite(APITestCase):
         self.assertFalse(api_call.called)
         self.assertEqual(len(existing_pokemon.abilities.all()), len(abilities))
         self.assertEqual(existing_pokemon.abilities.first().pk, abilities[0].pk)
+
+    @patch('pokemon.external_pokemon_api.requests.get')
+    def test_get_pokemon_available_names(self, api_call):
+        mock_response = MagicMock()
+        mock_response.json = MagicMock(return_value={
+            "count": 964,
+            "next": 'null',
+            "previous": 'null',
+            "results": [
+                {
+                    "name": "bulbasaur",
+                    "url": "https://pokeapi.co/api/v2/pokemon/1/"
+                },
+                {
+                    "name": "ivysaur",
+                    "url": "https://pokeapi.co/api/v2/pokemon/2/"
+                }, ]})
+        api_call.return_value = mock_response
+
+        result = get_pokemon_available_names()
+        self.assertEqual(["bulbasaur", "ivysaur"], result)
 
 
 class ListPokemonActionTestSuite(APITestCase):

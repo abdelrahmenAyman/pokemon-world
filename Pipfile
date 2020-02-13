@@ -10,6 +10,7 @@ mypy = "*"
 pytest-django = "*"
 djangorestframework-stubs = "*"
 django-stubs = "*"
+pytest-cov = "*"
 
 [packages]
 django = "*"

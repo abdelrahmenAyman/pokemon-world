@@ -64,6 +64,17 @@ class CreatePokemonActionTestSuite(APITestCase):
         response = self.client.post(path=self.list_path, data=self.valid_creation_data)
         self.assertEqual(400, response.status_code)
 
+    @patch('pokemon.views.retrieve_pokemon_abilities')
+    def test_create_pokemon_with_invalid_name_does_not_hit_external_api(self, api_call):
+        invalid_data = {
+            'name': 'Non existing pokemon',
+            'description': 'Mighty Pokemon',
+            'weight': 59
+        }
+        response = self.client.post(path=self.list_path, data=invalid_data)
+        self.assertEqual(400, response.status_code)
+        self.assertFalse(api_call.called)
+
 
 class ExternalPokemonAPIModuleTestSuite(APITestCase):
 

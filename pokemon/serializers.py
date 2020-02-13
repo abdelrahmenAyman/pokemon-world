@@ -1,5 +1,6 @@
 from typing import Dict
 
+from django.conf import settings
 from rest_framework import serializers
 
 from pokemon.models import Pokemon, Ability
@@ -22,6 +23,8 @@ class PokemonSerializer(serializers.ModelSerializer):
     def validate_name(value: str) -> str:
         if Pokemon.objects.filter(name=value).exists():
             raise serializers.ValidationError('Pokemon with that name already exists')
+        if value not in settings.AVAILABLE_POKEMON_NAMES:
+            raise serializers.ValidationError('That name does not match any Pokemon')
         return value
 
     def create(self, validated_data: Dict) -> Pokemon:

@@ -82,3 +82,23 @@ class UpdateDigimonActionTestSuite(APITestCase):
 
         self.assertEqual(403, response.status_code)
         self.assertNotEqual(self.weight_data['weight'], self.digimon_to_update.weight)
+
+
+class ListActionTestSuite(APITestCase):
+
+    def setUp(self):
+        self.list_path = reverse('digimon-list')
+        DigimonFactory.create_batch(2)
+
+    def test_list_as_authenticated_user(self):
+        self.client.force_authenticate(UserFactory())
+        response = self.client.get(self.list_path)
+
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(Digimon.objects.count(), len(response.data))
+
+    def test_list_as_anonymous_user(self):
+        response = self.client.get(self.list_path)
+
+        self.assertEqual(200, response.status_code)
+        self.assertEqual(Digimon.objects.count(), len(response.data))

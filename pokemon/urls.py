@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
-from auth.views import AuthenticationViewSet
+from authentication.views import AuthenticationViewSet
 from digimon.views import DigimonViewSet
 from pokemon.external_pokemon_api import get_pokemon_available_names
 from pokemon.views import PokemonViewSet

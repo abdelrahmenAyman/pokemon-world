@@ -1,9 +1,9 @@
-from django.contrib.auth import get_user_model, login
+from django.contrib.auth import get_user_model
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from auth.serializers import LoginSerializer
+from authentication.serializers import LoginSerializer
 
 User = get_user_model()
 
@@ -15,6 +15,5 @@ class AuthenticationViewSet(GenericViewSet):
     def login(self, request):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = User.objects.get(username=serializer.validated_data['email'])
-        login(request, user)
+        serializer.login_user()
         return Response()

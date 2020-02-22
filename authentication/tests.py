@@ -81,7 +81,7 @@ class LoginSerializerTestSuite(APITestCase):
             self.fail('`.login_user()` raised an exception')
 
 
-class LogoutSerializerTestSuite(APITestCase):
+class LogoutEndpointTestSuite(APITestCase):
 
     def setUp(self):
         self.logout_path = reverse('auth-logout')
@@ -99,3 +99,48 @@ class LogoutSerializerTestSuite(APITestCase):
 
         self.assertEqual(200, response.status_code)
         self.assertFalse(client_user.is_authenticated)
+
+
+class RegisterEndpointTestSuite(APITestCase):
+
+    def setUp(self):
+        self.register_path = reverse('auth-register')
+        self.valid_data = {
+            'email': 'new_email@example.com',
+            'password': 'password',
+            'confirm_password': 'password'
+        }
+
+    def test_register_passwords_does_not_match(self):
+        data = {
+            'email': 'abdelrahmen@example.com',
+            'password': 'password',
+            'confirm_password': 'another password'
+        }
+        response = self.client.post(path=self.register_path, data=data)
+
+        self.assertEqual(400, response.status_code)
+
+    def test_register_with_existing_email(self):
+        existing_user = UserFactory()
+        data = {
+            'email': existing_user.email,
+            'password': 'password',
+            'confirm_password': 'password'
+        }
+        response = self.client.post(path=self.register_path, data=data)
+
+        self.assertEqual(400, response.status_code)
+
+    def test_register_with_valid_data_user_is_created(self):
+        response = self.client.post(path=self.register_path, data=self.valid_data)
+
+        self.assertEqual(201, response.status_code)
+        self.assertEqual(1, User.objects.count())
+
+    def test_register_with_valid_data_username_is_set_to_email(self):
+        response = self.client.post(path=self.register_path, data=self.valid_data)
+        created_user = User.objects.get(email=self.valid_data.get('email'))
+
+        self.assertEqual(201, response.status_code)
+        self.assertEqual(created_user.email, created_user.username)

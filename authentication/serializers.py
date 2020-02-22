@@ -1,7 +1,9 @@
 from typing import Dict, Any
 
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, get_user_model
 from rest_framework import serializers
+
+User = get_user_model()
 
 
 class LoginSerializer(serializers.Serializer):
@@ -25,3 +27,33 @@ class LoginSerializer(serializers.Serializer):
             username=self.validated_data['email'],
             password=self.validated_data['password'])
         login(request=self.context['request'], user=user)
+
+
+class RegisterUserSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField(
+        style={'input_type': 'password', 'placeholder': 'Password'},
+        write_only=True)
+    confirm_password = serializers.CharField(
+        style={'input_type': 'password', 'placeholder': 'Password'},
+        write_only=True)
+
+    @staticmethod
+    def validate_email(value: str) -> str:
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError('Email already exists')
+        return value
+
+    def validate(self, attrs: Dict[str, Any]) -> Dict[str, Any]:
+        self.validate_passwords_matching(attrs)
+        return attrs
+
+    @staticmethod
+    def validate_passwords_matching(attrs: Dict[str, Any]) -> None:
+        if attrs.get('password') != attrs.get('confirm_password'):
+            raise serializers.ValidationError('Passwords does not match')
+
+    def create(self, validated_data: Dict[str, Any]) -> User:
+        validated_data['username'] = validated_data.get('email')
+        del validated_data['confirm_password']
+        return User.objects.create(**validated_data)

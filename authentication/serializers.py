@@ -1,3 +1,5 @@
+from typing import Dict, Any
+
 from django.contrib.auth import authenticate, login
 from rest_framework import serializers
 
@@ -8,7 +10,7 @@ class LoginSerializer(serializers.Serializer):
         style={'input_type': 'password', 'placeholder': 'Password'},
         write_only=True)
 
-    def validate(self, attrs):
+    def validate(self, attrs: Dict[str, Any]) -> Dict[str, Any]:
         user = authenticate(request=self.context['request'], username=attrs['email'], password=attrs['password'])
         if user is None:
             raise serializers.ValidationError('Credentials does not match')

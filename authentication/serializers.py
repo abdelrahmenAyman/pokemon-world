@@ -15,7 +15,7 @@ class LoginSerializer(serializers.Serializer):
     def validate(self, attrs: Dict[str, Any]) -> Dict[str, Any]:
         user = authenticate(request=self.context['request'], username=attrs['email'], password=attrs['password'])
         if user is None:
-            raise serializers.ValidationError('Credentials does not match')
+            raise serializers.ValidationError('Credentials does not match or email does not exist')
         return attrs
 
     def login_user(self) -> None:
@@ -54,6 +54,7 @@ class RegisterUserSerializer(serializers.Serializer):
             raise serializers.ValidationError('Passwords does not match')
 
     def create(self, validated_data: Dict[str, Any]) -> User:
-        validated_data['username'] = validated_data.get('email')
-        del validated_data['confirm_password']
-        return User.objects.create(**validated_data)
+        user = User(email=validated_data.get('email'), username=validated_data.get('email'))
+        user.set_password(validated_data.get('password'))
+        user.save()
+        return user

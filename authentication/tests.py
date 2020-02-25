@@ -1,3 +1,5 @@
+from unittest.mock import MagicMock
+
 from django.contrib import auth
 from rest_framework.reverse import reverse
 from rest_framework.test import APITestCase, APIClient
@@ -71,12 +73,10 @@ class LoginSerializerTestSuite(APITestCase):
         self.assertRaises(Exception, self.serializer_instance.login_user)
 
     def test_login_serializer_is_valid_called(self):
+        self.serializer_instance.context['request'] = MagicMock()
         self.serializer_instance.is_valid()
         try:
             self.serializer_instance.login_user()
-        except KeyError:
-            # the function execution passed the assertion successfully
-            pass
         except:
             self.fail('`.login_user()` raised an exception')
 

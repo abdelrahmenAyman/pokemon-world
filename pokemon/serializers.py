@@ -12,12 +12,13 @@ class AbilitySerializer(serializers.ModelSerializer):
         fields = ('name', 'effect', 'short_effect', 'api_obj_id')
 
 
-class PokemonSerializer(serializers.ModelSerializer):
+class ReadCreatePokemonSerializer(serializers.ModelSerializer):
+    """Serializer to be used for all actions on Pokemon resource except for update actions"""
     abilities = AbilitySerializer(many=True, required=False, read_only=True)
 
     class Meta:
         model = Pokemon
-        fields = ('name', 'description', 'weight', 'abilities')
+        fields = ('pk', 'name', 'description', 'weight', 'abilities')
 
     @staticmethod
     def validate_name(value: str) -> str:
@@ -30,3 +31,11 @@ class PokemonSerializer(serializers.ModelSerializer):
     def create(self, validated_data: Dict) -> Pokemon:
         validated_data['creator'] = self.context['request'].user
         return super().create(validated_data)
+
+
+class UpdatePokemonSerializer(serializers.ModelSerializer):
+    weight = serializers.DecimalField(required=False, max_digits=4, decimal_places=1)
+
+    class Meta:
+        model = Pokemon
+        fields = ('pk', 'description', 'weight')

@@ -18,6 +18,7 @@ djangorestframework = "*"
 requests = "*"
 pip = "*"
 django-stubs = "*"
+drf-yasg = "*"
 
 [requires]
 python_version = "3.7"

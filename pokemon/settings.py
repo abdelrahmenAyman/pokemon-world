@@ -38,7 +38,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'pokemon',
     'digimon',
-    'authentication'
+    'authentication',
+    'drf_yasg'
 ]
 
 MIDDLEWARE = [
@@ -87,6 +88,17 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ]
+}
+
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'Basic': {
+            'type': 'basic'
+        },
+        'Session': {
+            'type': 'basic'
+        }
+    }
 }
 
 # Password validation
